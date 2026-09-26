@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система Должники - 10 Октября 2026</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.5);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #090d16;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .splash-logo {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            background: linear-gradient(to right, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(99,102,241,0.3)); }
+            50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(168,85,247,0.6)); }
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 2.5rem;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .input-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            margin-top: 10px;
+        }
+
+        #main-layout {
+            display: none;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 1.25rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .summary-val {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .table-card {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+        .cleaning-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .cleaning-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .modal.active { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background: #111827;
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 480px;
+        }
+
+        .credit-card {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .card-number {
+            font-size: 1.4rem;
+            letter-spacing: 3px;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .message-box {
+            background: rgba(99,102,241,0.1);
+            border-left: 4px solid var(--accent-primary);
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div class="splash-logo">ДОЛЖНИКИ</div>
+        <div class="login-card">
+            <div class="tabs">
+                <button class="tab-btn active" id="t-user" onclick="switchTab('user')">Жилец</button>
+                <button class="tab-btn" id="t-admin" onclick="switchTab('admin')">Админ</button>
+            </div>
+
+            <div id="user-form">
+                <div class="input-group">
+                    <label>Логин</label>
+                    <input type="text" id="user-login" placeholder="Логин (например, Dfgh)">
+                </div>
+                <div class="input-group">
+                    <label>Пароль</label>
+                    <input type="password" id="user-pass" placeholder="••••••••">
+                </div>
+                <button class="btn" onclick="tryUserLogin()">Войти в кабинет</button>
+            </div>
+
+            <div id="admin-form" style="display: none;">
+                <div class="input-group">
+                    <label>Код Администратора</label>
+                    <input type="password" id="admin-code" placeholder="Введите код...">
+                </div>
+                <button class="btn" onclick="tryAdminLogin()">Войти как Админ</button>
+            </div>
+
+            <button class="btn btn-secondary" onclick="enterAsGuest()">Я не знаю код</button>
+        </div>
+    </div>
+
+    <div id="main-layout">
+        <header>
+            <div>
+                <h1 style="font-size: 1.5rem;">Ведомость «Должники» от 10 Октября 2026</h1>
+                <p id="role-indicator" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div class="avatar" id="user-avatar">?</div>
+                <div>
+                    <h4 id="user-display-name">Гость</h4>
+                    <a href="#" onclick="logout()" style="color: var(--danger); font-size: 0.8rem; text-decoration: none;">Выйти</a>
+                </div>
+            </div>
+        </header>
+
+        <div class="summary-bar">
+            <div class="summary-card" style="border-left: 4px solid var(--accent-primary);">
+                <div>Сумма за услугу</div>
+                <div class="summary-val">31 731 ₽</div>
+            </div>
+            <div class="summary-card" style="border-left: 4px solid var(--success);">
+                <div>Общий котёл</div>
+                <div class="summary-val">8 000 ₽</div>
+            </div>
+            <div class="summary-card" style="border-left: 4px solid var(--danger);">
+                <div>Расходы</div>
+                <div class="summary-val">-7 400 ₽</div>
+            </div>
+            <div class="summary-card" style="border-left: 4px solid var(--warning);">
+                <div>Остаток</div>
+                <div class="summary-val">600 ₽</div>
+            </div>
+        </div>
+
+        <div id="personal-notifications" class="table-card" style="display: none;">
+            <h3 style="margin-bottom: 1rem;">🔔 Сообщения от Администратора</h3>
+            <div id="notifications-list"></div>
+        </div>
+
+        <div class="table-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>📊 Таблица расчетов жильцов</h3>
+                <div id="admin-actions" style="display: none;">
+                    <button class="btn" style="width: auto; padding: 8px 16px;" onclick="openConfigModal()">⚙️ Управление тарифами</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Жилец</th>
+                        <th id="h-kom">ком.услуг</th>
+                        <th id="h-arenda">аренда</th>
+                        <th id="h-wifi">вайфай</th>
+                        <th>Осталось выплатить</th>
+                        <th>Общий котёл</th>
+                        <th>Хайр от сердца</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+        </div>
+
+        <div class="table-card" id="admin-requests-card" style="display: none;">
+            <h3 style="margin-bottom: 1rem;">💳 Подтверждение переводов на карту</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Жилец</th>
+                        <th>Тип услуги</th>
+                        <th>Сумма</th>
+                        <th>Управление</th>
+                    </tr>
+                </thead>
+                <tbody id="requests-body"></tbody>
+            </table>
+        </div>
+
+        <div class="table-card">
+            <h3 style="margin-bottom: 1rem;">🧹 График уборки</h3>
+            <div class="cleaning-grid" id="cleaning-schedule"></div>
+        </div>
+    </div>
+
+    <!-- Модалка оплаты -->
+    <div class="modal" id="pay-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1rem;">Оплата через карту</h3>
+            <div class="credit-card">
+                <div>КАРТА АДМИНИСТРАТОРА</div>
+                <div class="card-number">2200 7021 9562 5293</div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <div>Срок: 07/36</div>
+                    <div>Код: 142</div>
+                </div>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+                Переведите средства по реквизитам. Деньги поступят напрямую Администратору.
+            </p>
+            <button class="btn" onclick="sendPayRequest()">Я перевёл деньги на карту</button>
+            <button class="btn btn-secondary" onclick="closeModal('pay-modal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Модалка управления тарифами -->
+    <div class="modal" id="config-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1rem;">Настройка столбцов и цен</h3>
+            <div class="input-group"><label>Столбец 1</label><input type="text" id="cfg-kom" value="ком.услуг"></div>
+            <div class="input-group"><label>Столбец 2</label><input type="text" id="cfg-arenda" value="аренда"></div>
+            <div class="input-group"><label>Столбец 3</label><input type="text" id="cfg-wifi" value="вайфай"></div>
+            <button class="btn" onclick="saveConfig()">Сохранить изменения</button>
+            <button class="btn btn-secondary" onclick="closeModal('config-modal')">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            residents: [
+                { id: 'latofat', name: 'Латофат', login: 'Latofat', pass: '7777', kom: 0, arenda: 0, wifi: 0, left: 7933, kotel: 2000, heart: 500, messages: [] },
+                { id: 'sharofat', name: 'Шарофат', login: 'Sharofat', pass: '8888', kom: 2270, arenda: 5500, wifi: 0, left: 163, kotel: 3000, heart: 0, messages: [] },
+                { id: 'farhot', name: 'Фархот', login: 'Farhot', pass: '9999', kom: 2270, arenda: 5500, wifi: 0, left: 163, kotel: 2000, heart: 0, messages: [] },
+                { id: 'axlidin', name: 'Ахлидин', login: 'Dfgh', pass: '24111874', kom: 0, arenda: 0, wifi: 0, left: 7933, kotel: 1000, messages: [] }
+            ],
+            requests: [],
+            cleaning: [
+                { week: 'Текущая неделя', p1: 'Латофат', p2: 'Шарофат', status: 'В ожидании', penalty: 0 },
+                { week: 'Следующая неделя', p1: 'Фархот', p2: 'Ахлидин', status: 'В ожидании', penalty: 0 }
+            ],
+            headers: { kom: 'ком.услуг', arenda: 'аренда', wifi: 'вайфай' }
+        };
+
+        if(localStorage.getItem('debt_state')) {
+            state = JSON.parse(localStorage.getItem('debt_state'));
+        }
+
+        let userRole = 'guest';
+        let loggedUser = null;
+
+        function save() { localStorage.setItem('debt_state', JSON.stringify(state)); }
+
+        function switchTab(tab) {
+            document.getElementById('t-user').classList.toggle('active', tab === 'user');
+            document.getElementById('t-admin').classList.toggle('active', tab === 'admin');
+            document.getElementById('user-form').style.display = tab === 'user' ? 'block' : 'none';
+            document.getElementById('admin-form').style.display = tab === 'admin' ? 'block' : 'none';
+        }
+
+        function tryAdminLogin() {
+            if(document.getElementById('admin-code').value === '2014') {
+                userRole = 'admin'; enterApp('Администратор', 'A');
+            } else { alert('Неверный код!'); }
+        }
+
+        function tryUserLogin() {
+            let l = document.getElementById('user-login').value;
+            let p = document.getElementById('user-pass').value;
+            let u = state.residents.find(r => r.login === l && r.pass === p);
+            if(u) { userRole = 'user'; loggedUser = u; enterApp(u.name, u.name[0]); }
+            else { alert('Неверные данные!'); }
+        }
+
+        function enterAsGuest() { userRole = 'guest'; enterApp('Гость', 'Г'); }
+
+        function enterApp(name, letter) {
+            document.getElementById('splash-screen').style.display = 'none';
+            document.getElementById('main-layout').style.display = 'block';
+            document.getElementById('user-display-name').innerText = name;
+            document.getElementById('user-avatar').innerText = letter;
+
+            let ri = document.getElementById('role-indicator');
+            if(userRole === 'admin') {
+                ri.innerText = 'Панель Полного Контроля'; ri.style.color = 'var(--success)';
+                document.getElementById('admin-actions').style.display = 'block';
+                document.getElementById('admin-requests-card').style.display = 'block';
+            } else if(userRole === 'user') {
+                ri.innerText = 'Личный кабинет жильца'; ri.style.color = 'var(--accent-primary)';
+                document.getElementById('personal-notifications').style.display = 'block';
+            } else {
+                ri.innerText = 'Режим просмотра'; ri.style.color = 'var(--text-muted)';
+            }
+            render();
+        }
+
+        function logout() { location.reload(); }
+
+        function render() {
+            document.getElementById('h-kom').innerText = state.headers.kom;
+            document.getElementById('h-arenda').innerText = state.headers.arenda;
+            document.getElementById('h-wifi').innerText = state.headers.wifi;
+
+            let tb = document.getElementById('table-body');
+            tb.innerHTML = '';
+            state.residents.forEach(r => {
+                let btn = '';
+                if(userRole === 'user' && loggedUser.id === r.id) {
+                    btn = `<button class="btn" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openPayModal('${r.id}')">Оплатить на карту</button>`;
+                } else if(userRole === 'admin') {
+                    btn = `<button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; margin:0;" onclick="sendAlert('${r.id}')">✉️ Смс</button>`;
+                } else {
+                    btn = '<span style="color:var(--text-muted)">—</span>';
+                }
+
+                tb.innerHTML += `
+                    <tr>
+                        <td><b>${r.name}</b></td>
+                        <td>${r.kom ? r.kom + ' ₽' : '—'}</td>
+                        <td>${r.arenda ? r.arenda + ' ₽' : '—'}</td>
+                        <td>${r.wifi ? r.wifi + ' ₽' : '—'}</td>
+                        <td style="color:var(--danger); font-weight:700;">${r.left} ₽</td>
+                        <td style="color:var(--success);">${r.kotel} ₽</td>
+                        <td style="color:#ec4899;">${r.heart ? r.heart + ' ₽' : '—'}</td>
+                        <td>${btn}</td>
+                    </tr>
+                `;
+            });
+
+            if(userRole === 'user' && loggedUser) {
+                let fresh = state.residents.find(r => r.id === loggedUser.id);
+                let nList = document.getElementById('notifications-list');
+                if(fresh.messages.length) {
+                    nList.innerHTML = fresh.messages.map(m => `<div class="message-box">${m}</div>`).join('');
+                } else {
+                    nList.innerText = 'Нет новых сообщений.';
+                }
+            }
+
+            if(userRole === 'admin') {
+                let rb = document.getElementById('requests-body');
+                rb.innerHTML = state.requests.length ? '' : '<tr><td colspan="4" style="text-align:center;">Нет новых заявок</td></tr>';
+                state.requests.forEach((req, idx) => {
+                    rb.innerHTML += `
+                        <tr>
+                            <td><b>${req.name}</b></td>
+                            <td><span class="badge badge-warning">Перевод на карту</span></td>
+                            <td><b>${req.amount} ₽</b></td>
+                            <td>
+                                <button class="btn" style="width:auto; padding:6px 12px; background:var(--success);" onclick="acceptReq(${idx})">Принять</button>
+                                <button class="btn btn-secondary" style="width:auto; padding:6px 12px; margin:0;" onclick="rejectReq(${idx})">Отклонить</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            let cg = document.getElementById('cleaning-schedule');
+            cg.innerHTML = '';
+            state.cleaning.forEach((c, idx) => {
+                let adm = userRole === 'admin' ? `
+                    <div style="margin-top:10px; display:flex; gap:5px;">
+                        <button class="btn" style="padding:4px 8px; font-size:0.75rem; background:var(--success);" onclick="cleanAction(${idx}, 'Принято')">Принять</button>
+                        <button class="btn" style="padding:4px 8px; font-size:0.75rem; background:var(--danger);" onclick="cleanAction(${idx}, 'Пропуск')">Пропуск</button>
+                    </div>
+                ` : '';
+                cg.innerHTML += `
+                    <div class="cleaning-card">
+                        <div style="display:flex; justify-content:between; margin-bottom:8px;">
+                            <span style="font-size:0.8rem; color:var(--text-muted); flex-grow:1;">${c.week}</span>
+                            <span class="badge ${c.status==='Принято'?'badge-success':c.status.includes('Штраф')?'badge-danger':'badge-warning'}">${c.status}</span>
+                        </div>
+                        <h4>🧹 ${c.p1} и ${c.p2}</h4>
+                        ${c.penalty ? `<div style="color:var(--danger); font-size:0.8rem; margin-top:5px; font-weight:bold;">⚠️ Штраф: Дежурство за двоих +${c.penalty}₽</div>` : ''}
+                        ${adm}
+                    </div>
+                `;
+            });
+        }
+
+        let targetResId = '';
+        function openPayModal(id) { targetResId = id; document.getElementById('pay-modal').classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function sendPayRequest() {
+            let r = state.residents.find(res => res.id === targetResId);
+            state.requests.push({ id: r.id, name: r.name, amount: r.left });
+            alert('Заявка отправлена администратору на подтверждение!');
+            closeModal('pay-modal'); save(); render();
+        }
+
+        function acceptReq(idx) {
+            let req = state.requests[idx];
+            let r = state.residents.find(res => res.id === req.id);
+            if(r) { r.left = 0; r.messages.push(`✅ Ваша оплата в размере ${req.amount} ₽ на карту принята!`); }
+            state.requests.splice(idx, 1); save(); render();
+        }
+
+        function rejectReq(idx) {
+            let req = state.requests[idx];
+            let r = state.residents.find(res => res.id === req.id);
+            if(r) { r.messages.push(`❌ Оплата на сумму ${req.amount} ₽ отклонена администратором.`); }
+            state.requests.splice(idx, 1); save(); render();
+        }
+
+        function sendAlert(id) {
+            let msg = prompt('Введите сообщение для жильца:');
+            if(msg) {
+                let r = state.residents.find(res => res.id === id);
+                r.messages.push(msg); alert('Отправлено!'); save(); render();
+            }
+        }
+
+        function cleanAction(idx, type) {
+            let c = state.cleaning[idx];
+            if(type === 'Принято') { c.status = 'Принято'; c.penalty = 0; }
+            else {
+                c.status = 'Пропуск / Штраф'; c.penalty = 1500;
+                state.residents.forEach(r => {
+                    if(r.name === c.p1 || r.name === c.p2) { r.left += 1500; r.messages.push('⚠️ Уборка пропущена! Начислен штраф 1500₽ и отработка за двоих.'); }
+                });
+            }
+            save(); render();
+        }
+
+        function openConfigModal() { document.getElementById('config-modal').classList.add('active'); }
+        function saveConfig() {
+            state.headers.kom = document.getElementById('cfg-kom').value;
+            state.headers.arenda = document.getElementById('cfg-arenda').value;
+            state.headers.wifi = document.getElementById('cfg-wifi').value;
+            closeModal('config-modal'); save(); render();
+        }
+    </script>
+</body>
+</html>
